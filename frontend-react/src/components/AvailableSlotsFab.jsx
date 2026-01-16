@@ -109,9 +109,6 @@ export default function AvailableSlotsFab({ turnos, onReservar, onVer }) {
                                             <span className="bg-slate-700/50 text-slate-300 border border-white/10 text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wide">
                                                 {slot.turno.categoria.genero}
                                             </span>
-                                            <span className="text-slate-500 text-xs font-bold uppercase ml-1">
-                                                C.{slot.cupo.canchaId}
-                                            </span>
                                         </div>
 
                                         {/* Segunda Línea: Hora y Día */}

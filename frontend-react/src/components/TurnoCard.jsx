@@ -193,9 +193,11 @@ export default function TurnoCard({ turno, onReservar, onVer, isAdmin, onAdminJu
                                             )}
                                         </span>
                                     )}
-                                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest pl-0.5">
-                                        Cancha {cupo.canchaId}
-                                    </div>
+                                    {isAdmin && (
+                                        <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest pl-0.5">
+                                            Cancha {cupo.canchaId}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
