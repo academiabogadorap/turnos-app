@@ -13,6 +13,7 @@ export default defineConfig({
             '/jugadores': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
             '/auth': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
             '/cupos': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/export': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
         }
     }
 })

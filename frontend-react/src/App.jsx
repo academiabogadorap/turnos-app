@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2, Lock, LogOut, PlusCircle, X, UserMinus, User } from 'lucide-react'
+import { Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2, Lock, LogOut, PlusCircle, X, UserMinus, User, FileDown } from 'lucide-react'
 import CategoryFilter from './components/CategoryFilter'
 import AvailableSlotsFab from './components/AvailableSlotsFab'
 import BookingModal from './components/BookingModal'
@@ -13,6 +13,9 @@ import AgendaView from './components/AgendaView'
 import ProfileView from './components/ProfileView'
 import AdminSlotModal from './components/AdminSlotModal'
 import AdminPlayerModal from './components/AdminPlayerModal'
+import AdminTurnoModal from './components/AdminTurnoModal'
+import AdminWaitlistModal from './components/AdminWaitlistModal'
+import logo from './assets/Logo Academia Bogado verde.png'
 
 export default function App() {
     const [turnos, setTurnos] = useState([])
@@ -33,6 +36,8 @@ export default function App() {
     const [loginModalOpen, setLoginModalOpen] = useState(false)
     const [adminSlotModalOpen, setAdminSlotModalOpen] = useState(false)
     const [adminPlayerModalOpen, setAdminPlayerModalOpen] = useState(false)
+    const [adminTurnoModalOpen, setAdminTurnoModalOpen] = useState(false)
+    const [adminWaitlistModalOpen, setAdminWaitlistModalOpen] = useState(false)
 
     // Initial Load & Auth Check
     useEffect(() => {
@@ -80,6 +85,13 @@ export default function App() {
     }
 
     const handleVerTurno = (turno) => {
+        // Lógica isAdmin: Abrir gestión de espera o turno
+        if (isAdmin) {
+            setSelectedTurno(turno)
+            setAdminWaitlistModalOpen(true)
+            return
+        }
+
         // Lógica de visualización: si hay lugar (Real, inc. Paracaidistas), abrir reserva.
         const todayStr = new Date().toISOString().split('T')[0]
 
@@ -146,6 +158,50 @@ export default function App() {
         } catch (e) { alert(e.message) }
     }
 
+    const handleExportExcel = async () => {
+        const token = localStorage.getItem('token')
+        if (!token) return
+
+        try {
+            const res = await fetch('/export/excel', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            if (res.status === 401 || res.status === 403) {
+                alert('Sesión expirada')
+                setIsAdmin(false)
+                return
+            }
+
+            if (!res.ok) throw new Error('Error al generar reporte')
+
+            const data = await res.json()
+            if (!data.ok || !data.fileBase64) throw new Error('Formato de respuesta inválido')
+
+            // Convertir Base64 a Blob
+            const binaryString = window.atob(data.fileBase64)
+            const len = binaryString.length
+            const bytes = new Uint8Array(len)
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i)
+            }
+
+            const newBlob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+            const url = window.URL.createObjectURL(newBlob)
+
+            const a = document.createElement('a')
+            a.href = url
+            a.download = data.fileName || `Reporte_Academia_${new Date().toISOString().split('T')[0]}.xlsx`
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+        } catch (e) {
+            console.error(e)
+            alert('Error descargando el Excel. Intente nuevamente.')
+        }
+    }
+
     // Filtrado
     const filteredTurnos = filterCategory === 'TODAS'
         ? turnos
@@ -171,14 +227,21 @@ export default function App() {
                                     PANEL ADMIN
                                 </h1>
                             ) : (
-                                <>
-                                    <span className="text-[10px] font-heading font-bold text-brand-lime uppercase tracking-[0.2em] pl-0.5 leading-none mb-0.5">
-                                        ACÁ SE INSCRIBE
-                                    </span>
-                                    <h1 className="text-2xl font-heading font-black italic text-white tracking-tighter leading-none drop-shadow-xl">
-                                        ACADEMIA <span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-500">BOGADO</span>
-                                    </h1>
-                                </>
+                                <div className="flex items-center gap-4">
+                                    <img
+                                        src={logo}
+                                        alt="Logo Academia Bogado"
+                                        className="h-12 w-auto drop-shadow-[0_0_15px_rgba(212,233,24,0.15)] transition-transform hover:scale-105 duration-500"
+                                    />
+                                    <div className="flex flex-col items-start justify-center">
+                                        <span className="text-[10px] font-heading font-bold text-brand-lime tracking-[0.35em] uppercase opacity-90 leading-tight ml-0.5">
+                                            ACADEMIA
+                                        </span>
+                                        <h1 className="text-3xl font-heading font-black italic text-white tracking-tighter leading-none drop-shadow-2xl">
+                                            BOGADO
+                                        </h1>
+                                    </div>
+                                </div>
                             )}
                         </div>
 
@@ -213,7 +276,31 @@ export default function App() {
                             )}
 
                             {isAdmin && (
-                                <button onClick={() => setIsAdmin(false)} className="bg-red-500 text-white text-xs px-2 py-1 rounded">Salir</button>
+                                <div className="flex items-center gap-3">
+                                    <button
+                                        onClick={() => setAdminTurnoModalOpen(true)}
+                                        className="bg-brand-highlight hover:bg-blue-400 text-white font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                    >
+                                        <PlusCircle className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Crear Turno</span>
+                                    </button>
+
+                                    <button
+                                        onClick={handleExportExcel}
+                                        className="bg-brand-lime hover:bg-white text-brand-dark font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded shadow-[0_0_15px_rgba(212,233,24,0.3)] hover:shadow-[0_0_20px_rgba(212,233,24,0.5)] transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                        title="Descargar Reporte Completo"
+                                    >
+                                        <FileDown className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Exportar</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setIsAdmin(false)}
+                                        className="bg-red-500/20 hover:bg-red-500 text-red-400 hover:text-white border border-red-500/30 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-all"
+                                    >
+                                        Salir
+                                    </button>
+                                </div>
                             )}
                         </div>
                     </div>
@@ -346,6 +433,19 @@ export default function App() {
                 onClose={() => setAdminPlayerModalOpen(false)}
                 turno={selectedTurno}
                 cupo={selectedTurno?.cupoSeleccionado}
+                onSuccess={fetchTurnos}
+            />
+
+            <AdminTurnoModal
+                isOpen={adminTurnoModalOpen}
+                onClose={() => setAdminTurnoModalOpen(false)}
+                onSuccess={fetchTurnos}
+            />
+
+            <AdminWaitlistModal
+                isOpen={adminWaitlistModalOpen}
+                onClose={() => setAdminWaitlistModalOpen(false)}
+                turno={selectedTurno}
                 onSuccess={fetchTurnos}
             />
 

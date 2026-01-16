@@ -11,7 +11,7 @@ const inscripcionesRoutes = require('./src/routes/inscripciones')
 const app = express()
 app.use(cors())
 app.use(express.json())
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, 'frontend-react', 'dist')))
 
 app.get('/health', (req, res) => {
     res.json({ ok: true })
@@ -23,6 +23,11 @@ app.use('/jugadores', jugadoresRoutes)
 app.use('/inscripciones', inscripcionesRoutes)
 app.use('/espera', require('./src/routes/espera'))
 app.use('/cupos', require('./src/routes/cupos'))
+app.use('/export', require('./src/routes/export'))
+
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend-react', 'dist', 'index.html'))
+})
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
