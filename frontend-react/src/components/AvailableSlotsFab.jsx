@@ -72,7 +72,7 @@ export default function AvailableSlotsFab({ turnos, onReservar, onVer }) {
                         <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
                             <div>
                                 <h3 className="text-xl font-heading font-black italic text-brand-lime">
-                                    ¡JUGÁ HOY!
+                                    ¡ENTRENÁ HOY!
                                 </h3>
                                 <p className="text-slate-400 text-xs mt-1">
                                     Tocá para ver detalles y reservar
