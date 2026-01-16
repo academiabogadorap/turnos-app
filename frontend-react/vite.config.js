@@ -1,0 +1,18 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+// https://vite.dev/config/
+export default defineConfig({
+    plugins: [react()],
+    server: {
+        // Proxy para evitar problemas de CORS durante desarrollo
+        proxy: {
+            '/turnos': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/inscripciones': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/espera': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/jugadores': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/auth': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+            '/cupos': { target: 'http://localhost:3000', changeOrigin: true, secure: false },
+        }
+    }
+})

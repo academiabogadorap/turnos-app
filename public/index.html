@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Turnos App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Turnos App</h1>
+            <div id="auth-section" style="display:flex; gap:10px; align-items:center;">
+                <!-- Injected via JS -->
+            </div>
+        </header>
+
+        <div id="login-modal" class="card hidden" style="max-width: 400px; margin: 0 auto 40px;">
+            <h2 style="margin-top:0">🔑 Admin Login</h2>
+            <form id="login-form">
+                <input type="text" id="user" placeholder="Usuario" required>
+                <input type="password" id="pass" placeholder="Contraseña" required>
+                <button type="submit" class="btn-primary" style="width:100%">Ingresar</button>
+            </form>
+        </div>
+
+        <!-- Modal Inscripción Pública -->
+        <div id="public-inscripcion-modal" class="card hidden"
+            style="max-width: 400px; margin: 0 auto 40px; border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h2 style="margin:0; font-size:1.2rem">📝 Anotarse al partido</h2>
+                <button onclick="closePublicModal()" class="btn-outline"
+                    style="padding:5px 10px; font-size:0.8rem">X</button>
+            </div>
+
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px">Completa tus datos para reservar el
+                lugar.</p>
+
+            <form id="public-form">
+                <input type="text" id="p-nombre" placeholder="Nombre" required>
+                <input type="text" id="p-apellido" placeholder="Apellido" required>
+                <input type="tel" id="p-telefono" placeholder="WhatsApp / Teléfono" required>
+
+                <input type="email" id="p-email" placeholder="Email (Obligatorio)" required>
+                <input type="email" id="p-email-confirm" placeholder="Confirma tu Email"
+                    style="margin-top:5px; border-color:#e5e7eb" required>
+
+                <button type="submit" class="btn-primary" style="width:100%">Confirmar Reserva</button>
+            </form>
+        </div>
+
+        <!-- Modal Lista de Espera -->
+        <div id="waitlist-modal" class="card hidden"
+            style="max-width: 400px; margin: 0 auto 40px; border: 1px solid #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h2 style="margin:0; font-size:1.2rem; color:#f59e0b">⏳ Lista de Espera</h2>
+                <button onclick="closeWaitlistModal()" class="btn-outline"
+                    style="padding:5px 10px; font-size:0.8rem">X</button>
+            </div>
+
+            <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:15px">El turno está completo. Déjanos tus
+                datos y te avisaremos si se libera un lugar.</p>
+
+            <form id="waitlist-form">
+                <input type="text" id="w-nombre" placeholder="Nombre" required>
+                <input type="text" id="w-apellido" placeholder="Apellido" required>
+                <input type="tel" id="w-telefono" placeholder="WhatsApp / Teléfono" required>
+                <input type="email" id="w-email" placeholder="Email" required>
+                <input type="email" id="w-email-confirm" placeholder="Confirma tu Email"
+                    style="margin-top:5px; border-color:#e5e7eb" required>
+
+                <button type="submit" class="btn-primary"
+                    style="width:100%; background-color: #d97706; border-color: #d97706">Anotarme en Espera</button>
+            </form>
+        </div>
+
+        <!-- Modal Editar Jugador (Admin) -->
+        <div id="edit-player-modal" class="card hidden"
+            style="max-width: 400px; margin: 0 auto 40px; border: 1px solid #8b5cf6; box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h2 style="margin:0; font-size:1.2rem; color:#8b5cf6">✏️ Editar Jugador</h2>
+                <button onclick="closeEditPlayerModal()" class="btn-outline"
+                    style="padding:5px 10px; font-size:0.8rem">X</button>
+            </div>
+
+            <form id="edit-player-form">
+                <input type="hidden" id="ep-id">
+                <label style="font-size:0.8rem; color:var(--text-muted)">Nombre</label>
+                <input type="text" id="ep-nombre" required>
+
+                <label style="font-size:0.8rem; color:var(--text-muted)">Apellido</label>
+                <input type="text" id="ep-apellido" required>
+
+                <label style="font-size:0.8rem; color:var(--text-muted)">Email</label>
+                <input type="email" id="ep-email" required>
+
+                <label style="font-size:0.8rem; color:var(--text-muted)">Categoría Asignada</label>
+                <select id="ep-categoria"
+                    style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--text-muted); margin-bottom:15px">
+                    <option value="">Sin Categoría</option>
+                    <!-- Options injected JS -->
+                </select>
+
+                <button type="submit" class="btn-primary"
+                    style="width:100%; background-color: #7c3aed; border-color: #7c3aed">Guardar Cambios</button>
+            </form>
+        </div>
+
+        <div id="admin-panel" class="admin-panel hidden">
+            <h2 style="margin-top:0">🛠 Panel Administrativo</h2>
+            <form id="create-turno-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="text" id="dia" placeholder="Día (Ej: Martes)" required>
+                <div>
+                    <input type="text" id="inicio" placeholder="Inicio (18:00)" style="width:45%" required>
+                    <input type="text" id="fin" placeholder="Fin (19:30)" style="width:45%" required>
+                </div>
+
+                <div style="grid-column: span 1;">
+                    <label style="display:block; font-size:0.8rem; margin-bottom:5px; color:var(--text-muted)">Nivel /
+                        Género</label>
+                    <select id="catNivelGenero"
+                        style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--text-muted);"
+                        required>
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+                <div style="grid-column: span 1;">
+                    <label
+                        style="display:block; font-size:0.8rem; margin-bottom:5px; color:var(--text-muted)">Tipo</label>
+                    <select id="catTipo"
+                        style="width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.2); color:white; border:1px solid var(--text-muted);"
+                        required>
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+
+                <div style="grid-column: span 2;">
+                    <label style="display:block; font-size:0.8rem; margin-bottom:5px; color:var(--text-muted)">Canchas a
+                        utilizar</label>
+                    <div id="canchas-check-container"
+                        style="display:flex; flex-wrap:wrap; gap:5px; padding:10px; background:rgba(0,0,0,0.2); border-radius:8px">
+                        <!-- JS injected -->
+                        <span style="color:gray; font-size:0.8rem">Cargando canchas...</span>
+                    </div>
+                </div>
+
+                <input type="number" id="cupos" placeholder="Cupos por Cancha" value="4" required>
+                <button type="submit" class="btn-primary" style="grid-column: span 2;">Crear Nuevo Turno</button>
+            </form>
+        </div>
+
+        <!-- Modal Gestión Lista Espera (Admin) -->
+        <div id="admin-waitlist-modal" class="card hidden"
+            style="max-width: 600px; margin: 0 auto 40px; border: 1px solid #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+                <h2 style="margin:0; font-size:1.2rem; color:#f59e0b">⏳ Gestión Lista de Espera</h2>
+                <button onclick="closeAdminWaitlistModal()" class="btn-outline"
+                    style="padding:5px 10px; font-size:0.8rem">X</button>
+            </div>
+
+            <div id="admin-waitlist-content">
+                <p style="color:var(--text-muted)">Cargando...</p>
+            </div>
+        </div>
+
+        <h2 style="margin-bottom: 20px">Turnos Disponibles</h2>
+        <div id="turnos-list" class="grid">
+            <!-- Turnos -->
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+
+</html>

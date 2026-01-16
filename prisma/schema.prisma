@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Jugador {
+  id            Int            @id @default(autoincrement())
+  nombre        String
+  apellido      String
+  email         String         @unique
+  telefono      String?
+  codigo        String         @unique // CODIGO PERMANENTE (Tipo DNI)
+  activo        Boolean        @default(true)
+
+  // Categoría asignada (Nivel del jugador)
+  categoriaId   Int?
+  categoria     Categoria?     @relation(fields: [categoriaId], references: [id])
+  
+  inscripciones Inscripcion[]
+}
+
+// Necesita el reverso en Categoria también (opcional pero Prisma se quejará si no)
+
+model Categoria {
+  id     Int    @id @default(autoincrement())
+  genero String // CABALLEROS, DAMAS, MIXTO (aunque Mixto lo borramos de facto)
+  nivel  String // 1ra, 2da, ... Principiante A
+  tipo   String // COMPETITIVO, FORMATIVO
+  activa Boolean @default(true)
+  turnos Turno[]
+  jugadores Jugador[]
+
+  @@unique([genero, nivel, tipo])
+}
+
+model Turno {
+  id         Int       @id @default(autoincrement())
+  dia        String
+  horaInicio String
+  horaFin    String
+  activo     Boolean   @default(true)
+
+  categoriaId Int
+  categoria   Categoria @relation(fields: [categoriaId], references: [id])
+
+  cupos     Cupo[]
+  listaEspera ListaEspera[]
+  createdAt DateTime @default(now())
+
+  @@index([activo])
+}
+
+model ListaEspera {
+  id        Int      @id @default(autoincrement())
+  turnoId   Int
+  nombre    String
+  apellido  String
+  email     String
+  telefono  String?
+  fechaAlta DateTime @default(now())
+  estado    String   @default("PENDIENTE") // PENDIENTE, ASIGNADO, CANCELADO
+
+  turno     Turno    @relation(fields: [turnoId], references: [id], onDelete: Cascade)
+  
+  @@index([turnoId])
+}
+
+model Cancha {
+  id     Int    @id @default(autoincrement())
+  numero Int    @unique
+  cupos  Cupo[]
+}
+
+model ClaseSuelta {
+  id        Int      @id @default(autoincrement())
+  cupoId    Int
+  fecha     String   // Formato YYYY-MM-DD
+  estado    String   @default("LIBRE") // LIBRE, TOMADO
+  origen    String?  // Ej: 'alumno_libera_codigo'
+  tomadoPor String?  // Nombre de quien tomó la suplencia
+  
+  cupo      Cupo     @relation(fields: [cupoId], references: [id], onDelete: Cascade)
+
+  @@index([fecha])
+  @@index([cupoId])
+}
+
+model Cupo {
+  id        Int        @id @default(autoincrement())
+  turnoId   Int
+  canchaId  Int
+  orden     Int
+  estado    CupoEstado @default(LIBRE)
+
+  // OJO: Cascade Delete activado
+  turno       Turno        @relation(fields: [turnoId], references: [id], onDelete: Cascade)
+  cancha      Cancha       @relation(fields: [canchaId], references: [id])
+  inscripcion Inscripcion?
+  clasesSueltas ClaseSuelta[]
+
+  @@index([turnoId])
+  @@index([canchaId])
+  @@index([estado])
+}
+
+model Inscripcion {
+  id        Int      @id @default(autoincrement())
+  jugadorId Int?
+  cupoId    Int      @unique
+  origen    String
+  fecha     DateTime @default(now())
+
+  // Datos Invitado (Guest)
+  nombreInvitado     String?
+  apellidoInvitado   String?
+  telefono           String?
+  email              String?
+  categoriaDeclarada String?
+  
+  codigoCancelacion  String? @unique
+
+  jugador Jugador? @relation(fields: [jugadorId], references: [id])
+  // OJO: Cascade Delete activado
+  cupo    Cupo     @relation(fields: [cupoId], references: [id], onDelete: Cascade)
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  usuario  String @unique
+  password String
+  activo   Boolean @default(true)
+}
+
+enum CupoEstado {
+  LIBRE
+  OCUPADO
+  BLOQUEADO
+}
