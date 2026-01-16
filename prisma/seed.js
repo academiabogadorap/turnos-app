@@ -51,7 +51,9 @@ async function main() {
 
     await prisma.admin.upsert({
         where: { usuario: 'admin' },
-        update: {},
+        update: {
+            password: passwordHash // Forzar actualización de pass por si estaba vieja
+        },
         create: {
             usuario: 'admin',
             password: passwordHash,
