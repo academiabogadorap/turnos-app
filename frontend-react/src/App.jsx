@@ -220,7 +220,7 @@ export default function App() {
             {/* Mostrar Header completo SOLO en modo Explorar, Visitante O ADMIN */}
             {(activeTab === 'explorar' || !studentCode || isAdmin) && (
                 <header className="sticky top-0 z-30 bg-brand-dark/90 backdrop-blur-md border-b border-white/5 shadow-2xl transition-all">
-                    <div className="p-4 flex justify-between items-center max-w-2xl mx-auto w-full">
+                    <div className="p-4 flex flex-col sm:flex-row justify-between items-center max-w-2xl mx-auto w-full gap-4 sm:gap-0">
                         <div className="flex flex-col select-none cursor-default" onDoubleClick={() => setLoginModalOpen(true)}>
                             {isAdmin ? (
                                 <h1 className="text-xl font-heading font-black italic text-brand-lime tracking-tighter drop-shadow-lg">
@@ -245,7 +245,7 @@ export default function App() {
                             )}
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
                             {!isAdmin && !studentCode && (
                                 <button
                                     onClick={() => setStudentModalOpen(true)}
