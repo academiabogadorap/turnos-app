@@ -129,77 +129,82 @@ export default function AdminSlotModal({ isOpen, onClose, turno, cupo, onSuccess
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm transition-opacity" onClick={onClose} />
 
-            <div className="relative w-full max-w-sm bg-slate-900 rounded-2xl border border-slate-700 shadow-2xl overflow-hidden p-6 space-y-4">
+            <div className="relative w-full max-w-sm bg-slate-900 sm:rounded-2xl rounded-t-2xl border border-slate-700 shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
 
-                <div className="flex justify-between items-start">
+                <div className="p-4 border-b border-slate-700 bg-slate-900/95 backdrop-blur shrink-0 flex justify-between items-center z-10 sticky top-0">
                     <div>
                         <h3 className="text-white font-bold text-lg">Administrar Cupo</h3>
                         <p className="text-slate-400 text-sm">Cancha {cupo.canchaId} • {turno.dia} {turno.horaInicio}</p>
                     </div>
-                    <button onClick={onClose}><X className="text-slate-500" /></button>
+                    <button onClick={onClose} className="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
+                    </button>
                 </div>
 
-                <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
-                    <span className="text-xs text-slate-500 uppercase font-bold block mb-1">Estado Actual</span>
-                    <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${isOccupied ? 'bg-blue-500' : isBlocked ? 'bg-red-500' : 'bg-green-500'}`} />
-                        <span className="text-white font-medium">
-                            {isOccupied ? nombreJugador : isBlocked ? 'BLOQUEADO' : 'LIBRE'}
-                        </span>
+                <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar">
+
+                    <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <span className="text-xs text-slate-500 uppercase font-bold block mb-1">Estado Actual</span>
+                        <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${isOccupied ? 'bg-blue-500' : isBlocked ? 'bg-red-500' : 'bg-green-500'}`} />
+                            <span className="text-white font-medium">
+                                {isOccupied ? nombreJugador : isBlocked ? 'BLOQUEADO' : 'LIBRE'}
+                            </span>
+                        </div>
                     </div>
-                </div>
 
-                <div className="grid gap-2">
+                    <div className="grid gap-2 pb-4">
 
-                    {/* Lógica de Pegado (Mover Destino) */}
-                    {!isOccupied && !isBlocked && movingPlayer && (
-                        <button
-                            onClick={() => onCompleteMove(turno, cupo)}
-                            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-blue-900/50 mb-2 animate-pulse"
-                        >
-                            <div className="flex items-center gap-2">
-                                <ArrowRightLeft className="w-5 h-5" />
-                                <span>MOVER AQUÍ A:</span>
-                            </div>
-                            <span className="text-xl uppercase">{movingPlayer.nombre}</span>
-                        </button>
-                    )}
-
-                    {isOccupied && (
-                        <>
-                            <button onClick={handleBaja} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
-                                <UserX className="w-4 h-4" /> Dar de Baja (Liberar)
-                            </button>
-
-                            {/* Botón Mover (Cortar) */}
+                        {/* Lógica de Pegado (Mover Destino) */}
+                        {!isOccupied && !isBlocked && movingPlayer && (
                             <button
-                                onClick={() => onStartMove(turno, cupo)}
-                                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                                onClick={() => onCompleteMove(turno, cupo)}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 rounded-xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-blue-900/50 mb-2 animate-pulse"
                             >
-                                <ArrowRightLeft className="w-4 h-4" /> Mover (Cambiar Turno)
+                                <div className="flex items-center gap-2">
+                                    <ArrowRightLeft className="w-5 h-5" />
+                                    <span>MOVER AQUÍ A:</span>
+                                </div>
+                                <span className="text-xl uppercase">{movingPlayer.nombre}</span>
                             </button>
+                        )}
 
-                            {/* Botón Editar Activo */}
-                            <button onClick={onEdit} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
-                                <Edit className="w-4 h-4" /> Editar Datos Jugador
+                        {isOccupied && (
+                            <>
+                                <button onClick={handleBaja} className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <UserX className="w-4 h-4" /> Dar de Baja (Liberar)
+                                </button>
+
+                                {/* Botón Mover (Cortar) */}
+                                <button
+                                    onClick={() => onStartMove(turno, cupo)}
+                                    className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                                >
+                                    <ArrowRightLeft className="w-4 h-4" /> Mover (Cambiar Turno)
+                                </button>
+
+                                {/* Botón Editar Activo */}
+                                <button onClick={onEdit} className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors">
+                                    <Edit className="w-4 h-4" /> Editar Datos Jugador
+                                </button>
+                            </>
+                        )}
+
+                        {!isOccupied && !isBlocked && (
+                            <button onClick={handleBloquear} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 border border-slate-600">
+                                <Ban className="w-4 h-4" /> Bloquear Cupo
                             </button>
-                        </>
-                    )}
+                        )}
 
-                    {!isOccupied && !isBlocked && (
-                        <button onClick={handleBloquear} className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-lg font-bold flex items-center justify-center gap-2 border border-slate-600">
-                            <Ban className="w-4 h-4" /> Bloquear Cupo
-                        </button>
-                    )}
-
-                    {isBlocked && (
-                        <button onClick={handleDesbloquear} className="w-full bg-green-500/10 hover:bg-green-500/20 text-green-500 py-3 rounded-lg font-bold flex items-center justify-center gap-2 border border-green-500/20">
-                            <Unlock className="w-4 h-4" /> Habilitar Cupo
-                        </button>
-                    )}
+                        {isBlocked && (
+                            <button onClick={handleDesbloquear} className="w-full bg-green-500/10 hover:bg-green-500/20 text-green-500 py-3 rounded-lg font-bold flex items-center justify-center gap-2 border border-green-500/20">
+                                <Unlock className="w-4 h-4" /> Habilitar Cupo
+                            </button>
+                        )}
+                    </div>
                 </div>
 
             </div>

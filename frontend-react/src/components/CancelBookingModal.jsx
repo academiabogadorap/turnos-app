@@ -53,38 +53,42 @@ export default function CancelBookingModal({ isOpen, onClose, onSuccess }) {
             {/* Backdrop con Blur fuerte */}
             <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-md transition-opacity" onClick={handleClose} />
 
-            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
                 {/* Decorative Top Line (Red for Danger) */}
-                <div className="h-1.5 w-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)]"></div>
+                <div className="h-1.5 w-full bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.5)] shrink-0"></div>
 
-                <button
-                    onClick={handleClose}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10"
-                >
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="relative shrink-0">
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10 bg-brand-dark/50 rounded-full"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
 
-                <div className="p-6 sm:p-8">
-                    <div className="flex items-start gap-4 mb-6">
-                        <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20">
-                            <Trash2 className="text-red-500 w-8 h-8" />
-                        </div>
-                        <div>
-                            <h3 className="text-2xl font-heading font-black italic text-white leading-none">
-                                CANCELAR RESERVA
-                            </h3>
-                            <p className="text-slate-400 text-sm mt-2">
-                                Ingresa el código de 4 dígitos para darte de baja.
-                            </p>
+                    <div className="p-6 sm:p-8 pb-0">
+                        <div className="flex items-start gap-4 mb-2">
+                            <div className="p-3 bg-red-500/10 rounded-2xl border border-red-500/20">
+                                <Trash2 className="text-red-500 w-8 h-8" />
+                            </div>
+                            <div>
+                                <h3 className="text-2xl font-heading font-black italic text-white leading-none">
+                                    CANCELAR RESERVA
+                                </h3>
+                                <p className="text-slate-400 text-sm mt-2">
+                                    Ingresa el código de 4 dígitos para darte de baja.
+                                </p>
+                            </div>
                         </div>
                     </div>
+                </div>
 
+                <div className="p-6 sm:p-8 pt-6 overflow-y-auto custom-scrollbar">
                     <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-4 mb-6 flex gap-3 text-red-200 text-xs font-medium">
                         <ShieldAlert className="w-5 h-5 shrink-0 text-red-500" />
                         <p>Esta acción es irreversible. Perderás tu lugar en el turno de forma definitiva.</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
+                    <form onSubmit={handleSubmit} className="space-y-6 pb-2">
                         <div className="relative group">
                             <label className="block text-xs font-bold text-slate-500 mb-2 ml-1 uppercase tracking-wider">Código de Baja</label>
                             <div className="relative">
@@ -119,6 +123,6 @@ export default function CancelBookingModal({ isOpen, onClose, onSuccess }) {
                     </form>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }

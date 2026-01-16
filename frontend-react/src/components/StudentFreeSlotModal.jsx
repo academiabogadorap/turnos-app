@@ -115,13 +115,13 @@ export default function StudentFreeSlotModal({ isOpen, onClose, onSuccess }) {
             <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-md transition-opacity" onClick={onClose} />
 
             {/* Modal Card */}
-            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
                 {/* Decorative Top Line (Lime Accent) */}
-                <div className="h-1.5 w-full bg-brand-lime shadow-[0_0_15px_rgba(212,233,24,0.5)]"></div>
+                <div className="h-1.5 w-full bg-brand-lime shadow-[0_0_15px_rgba(212,233,24,0.5)] shrink-0"></div>
 
-                <div className="p-6 sm:p-8">
+                <div className="p-6 sm:p-8 pb-0 shrink-0 bg-brand-dark/95 backdrop-blur-sm z-10">
                     {/* Header */}
-                    <div className="flex justify-between items-start mb-6">
+                    <div className="flex justify-between items-start mb-2">
                         <div>
                             <span className="inline-block px-3 py-1 rounded-full bg-brand-blue/50 border border-brand-highlight/30 text-brand-highlight text-[10px] font-bold tracking-widest uppercase mb-2">
                                 MI PORTAL
@@ -144,9 +144,11 @@ export default function StudentFreeSlotModal({ isOpen, onClose, onSuccess }) {
                             </button>
                         </div>
                     </div>
+                </div>
 
+                <div className="p-6 sm:p-8 pt-4 overflow-y-auto custom-scrollbar">
                     {step === 1 && (
-                        <form onSubmit={handleLoginSubmit} className="space-y-6">
+                        <form onSubmit={handleLoginSubmit} className="space-y-6 pb-2">
                             <div className="relative group">
                                 <label className="block text-xs font-bold text-slate-500 mb-2 ml-1 uppercase tracking-wider">Tu Código</label>
                                 <div className="relative">
@@ -182,7 +184,7 @@ export default function StudentFreeSlotModal({ isOpen, onClose, onSuccess }) {
                     )}
 
                     {step === 2 && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300 pb-2">
 
                             {/* Empty State */}
                             {mySlots.length === 0 && (
@@ -193,7 +195,7 @@ export default function StudentFreeSlotModal({ isOpen, onClose, onSuccess }) {
                                 </div>
                             )}
 
-                            <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1 custom-scrollbar">
+                            <div className="space-y-3 overflow-y-visible pr-1">
                                 {mySlots.map((slot) => {
                                     const isLibreHoy = slot.estadoHoy === 'LIBRE'
                                     return (
@@ -240,7 +242,7 @@ export default function StudentFreeSlotModal({ isOpen, onClose, onSuccess }) {
                                 })}
                             </div>
 
-                            <div className="pt-2 text-center">
+                            <div className="pt-2 text-center pb-4">
                                 <span className="text-[10px] text-slate-600 font-mono uppercase tracking-widest">
                                     CÓDIGO ACTIVO: {codigo}
                                 </span>

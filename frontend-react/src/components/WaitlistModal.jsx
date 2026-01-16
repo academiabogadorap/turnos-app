@@ -67,29 +67,40 @@ export default function WaitlistModal({ isOpen, onClose, turno, onSuccess }) {
             {/* Backdrop Dark & Blur */}
             <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-md transition-opacity" onClick={onClose} />
 
-            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
                 {/* Decorative Top Line (Amber for Waitlist) */}
-                <div className="h-1.5 w-full bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.5)]"></div>
+                <div className="h-1.5 w-full bg-amber-400 shadow-[0_0_15px_rgba(251,191,36,0.5)] shrink-0"></div>
 
-                <div className="p-6 sm:p-8">
-                    {/* Header */}
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-bold tracking-widest uppercase mb-2">
-                                TURNO COMPLETO
-                            </span>
-                            <h3 className="text-2xl font-heading font-black italic text-white flex items-center gap-2">
-                                LISTA DE ESPERA
-                            </h3>
-                            <p className="text-slate-400 text-sm mt-1">
-                                Si alguien cancela, te avisaremos.
-                            </p>
-                        </div>
-                        <div className="p-3 bg-amber-500/10 rounded-full border border-amber-500/20">
-                            <Hourglass className="w-6 h-6 text-amber-500 animate-pulse" />
+                <div className="relative shrink-0">
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10 bg-brand-dark/50 rounded-full"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+
+                    <div className="p-6 sm:p-8 pb-2">
+                        {/* Header */}
+                        <div className="flex justify-between items-start mb-2">
+                            <div>
+                                <span className="inline-block px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[10px] font-bold tracking-widest uppercase mb-2">
+                                    TURNO COMPLETO
+                                </span>
+                                <h3 className="text-2xl font-heading font-black italic text-white flex items-center gap-2">
+                                    LISTA DE ESPERA
+                                </h3>
+                                <p className="text-slate-400 text-sm mt-1">
+                                    Si alguien cancela, te avisaremos.
+                                </p>
+                            </div>
+                            <div className="p-3 bg-amber-500/10 rounded-full border border-amber-500/20 mt-8 sm:mt-0">
+                                <Hourglass className="w-6 h-6 text-amber-500 animate-pulse" />
+                            </div>
                         </div>
                     </div>
+                </div>
 
+                <div className="p-6 sm:p-8 pt-0 overflow-y-auto custom-scrollbar">
                     {/* Turno Info Card */}
                     <div className="bg-black/40 border border-white/5 rounded-xl p-4 mb-6 flex items-center justify-between">
                         <div>
@@ -106,7 +117,7 @@ export default function WaitlistModal({ isOpen, onClose, turno, onSuccess }) {
                         </div>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-5">
+                    <form onSubmit={handleSubmit} className="space-y-5 pb-4">
                         <div className="grid grid-cols-2 gap-4">
                             <div className="col-span-2 sm:col-span-1">
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Nombre</label>
@@ -156,13 +167,15 @@ export default function WaitlistModal({ isOpen, onClose, turno, onSuccess }) {
                             </div>
                         )}
 
-                        <button
-                            disabled={loading}
-                            type="submit"
-                            className="group w-full bg-amber-500 hover:bg-amber-400 text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all hover:scale-[1.01]"
-                        >
-                            {loading ? 'ANOTANDO...' : 'ANOTARME EN ESPERA'}
-                        </button>
+                        <div className="pt-2 sticky bottom-0 bg-brand-dark/95 backdrop-blur-md pb-2 -mx-4 px-4 sm:static sm:bg-transparent sm:pb-0 sm:px-0 sm:mx-0">
+                            <button
+                                disabled={loading}
+                                type="submit"
+                                className="group w-full bg-amber-500 hover:bg-amber-400 text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.3)] hover:shadow-[0_0_30px_rgba(245,158,11,0.5)] transition-all hover:scale-[1.01]"
+                            >
+                                {loading ? 'ANOTANDO...' : 'ANOTARME EN ESPERA'}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>

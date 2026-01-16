@@ -86,20 +86,20 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
             {/* Backdrop con Blur fuerte para enfocar atención */}
             <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-md transition-opacity" onClick={handleClose} />
 
-            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300">
+            <div className="relative w-full max-w-md bg-brand-dark/95 border border-white/10 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-300 max-h-[90vh] flex flex-col">
                 {/* Decorative Top Line (Lime Accent) */}
-                <div className="h-1.5 w-full bg-brand-lime shadow-[0_0_15px_rgba(212,233,24,0.5)]"></div>
+                <div className="h-1.5 w-full bg-brand-lime shadow-[0_0_15px_rgba(212,233,24,0.5)] shrink-0"></div>
 
-                <button
-                    onClick={handleClose}
-                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10"
-                >
-                    <X className="w-6 h-6" />
-                </button>
+                <div className="relative shrink-0">
+                    <button
+                        onClick={handleClose}
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10 bg-brand-dark/50 rounded-full"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
 
-                <div className="p-6 sm:p-8">
-                    {/* ENCABEZADO: Limpio y Directo */}
-                    <div className="mb-6">
+                    {/* ENCABEZADO: Fijo en el tope */}
+                    <div className="pt-8 px-6 sm:px-8 pb-4 border-b border-white/5 bg-brand-dark/50 backdrop-blur-sm">
                         <span className="inline-block px-3 py-1 rounded-full bg-brand-blue/50 border border-brand-highlight/30 text-brand-highlight text-[10px] font-bold tracking-widest uppercase mb-3">
                             {turno?.categoria?.nivel} {turno?.categoria?.genero}
                         </span>
@@ -114,7 +114,9 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
                             {turno?.horaInicio} hs
                         </div>
                     </div>
+                </div>
 
+                <div className="p-6 sm:p-8 pt-4 overflow-y-auto custom-scrollbar">
                     {/* ALERT: PARACAIDISTAS */}
                     {cupo?.esParacaidista && !successData && (
                         <div className="mb-6 p-4 bg-purple-900/20 border-l-4 border-purple-500 rounded-r-lg flex gap-3 animate-pulse">
@@ -141,7 +143,7 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
 
                     {/* VISTA 1: ÉXITO (Reserva Confirmada) */}
                     {successData ? (
-                        <div className="text-center animate-in zoom-in-95 duration-300">
+                        <div className="text-center animate-in zoom-in-95 duration-300 pb-4">
                             <div className="w-20 h-20 bg-brand-lime/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-brand-lime/20 shadow-[0_0_30px_rgba(212,233,24,0.2)]">
                                 <CheckCircle2 className="w-10 h-10 text-brand-lime" />
                             </div>
@@ -192,14 +194,14 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
 
                             <button
                                 onClick={handleClose}
-                                className="w-full bg-brand-lime hover:bg-white hover:scale-[1.02] text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(212,233,24,0.3)]"
+                                className="w-full bg-brand-lime hover:bg-white hover:scale-[1.02] text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(212,233,24,0.3)] mb-4"
                             >
                                 ENTENDIDO, ¡VAMOS!
                             </button>
                         </div>
                     ) : (
                         /* VISTA 2: FORMULARIO */
-                        <form onSubmit={handleSubmit} className="space-y-5">
+                        <form onSubmit={handleSubmit} className="space-y-5 pb-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="col-span-2 sm:col-span-1">
                                     <label className="block text-xs font-bold text-slate-400 mb-1.5 ml-1">Nombre</label>
@@ -260,7 +262,7 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
                                 </div>
                             </div>
 
-                            <div className="pt-2">
+                            <div className="pt-2 sticky bottom-0 bg-brand-dark/95 backdrop-blur-md pb-2 -mx-4 px-4 sm:static sm:bg-transparent sm:pb-0 sm:px-0 sm:mx-0">
                                 <button
                                     type="submit"
                                     disabled={loading}

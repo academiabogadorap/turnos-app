@@ -46,11 +46,11 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
             {/* Backdrop Dark & Blur */}
             <div className="absolute inset-0 bg-brand-dark/80 backdrop-blur-md transition-opacity" onClick={onClose} />
 
-            <div className="relative w-full max-w-sm bg-brand-dark/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="relative w-full max-w-sm bg-brand-dark/95 border border-white/10 rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300 max-h-[90vh] flex flex-col">
                 {/* Decorative Top Line (Lime for Admin) */}
-                <div className="h-1.5 w-full bg-brand-highlight shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+                <div className="h-1.5 w-full bg-brand-highlight shadow-[0_0_15px_rgba(59,130,246,0.5)] shrink-0"></div>
 
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto custom-scrollbar">
                     {/* Header */}
                     <div className="flex flex-col items-center mb-6">
                         <div className="w-16 h-16 bg-brand-highlight/10 rounded-full flex items-center justify-center border border-brand-highlight/30 mb-4 shadow-[0_0_20px_rgba(59,130,246,0.2)]">
@@ -66,12 +66,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }) {
 
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10"
+                        className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white hover:rotate-90 transition-all z-10 bg-brand-dark/50 rounded-full"
                     >
                         <X className="w-5 h-5" />
                     </button>
 
-                    <form onSubmit={handleLogin} className="space-y-5">
+                    <form onSubmit={handleLogin} className="space-y-5 pb-2">
                         <div className="space-y-4">
                             <div className="relative group">
                                 <label className="block text-xs font-bold text-slate-500 mb-1.5 ml-1">Usuario</label>
