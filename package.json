@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "npx prisma migrate deploy && node index.js",
+    "start": "npx prisma migrate deploy && node prisma/seed.js && node index.js",
     "build": "npm install && cd frontend-react && npm install --include=dev && npm run build && cd .. && npx prisma generate"
   },
   "keywords": [],
