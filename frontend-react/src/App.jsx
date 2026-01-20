@@ -611,14 +611,15 @@ export default function App() {
                 onSuccess={fetchTurnos}
             />
 
-            {/* Quick Access Fab (Solo Usuarios en Explorar) */}
-            {!loading && !isAdmin && activeTab === 'explorar' && (
-                <AvailableSlotsFab
-                    turnos={turnos}
-                    onVer={handleVerTurno}
-                    onReservar={handleReservarDirecto}
-                />
-            )}
+            {/* Quick Access Fab (Solo Usuarios en Explorar y sin modales abiertos) */}
+            {!loading && !isAdmin && activeTab === 'explorar' &&
+                !bookingModalOpen && !cancelModalOpen && !studentModalOpen && !loginModalOpen && (
+                    <AvailableSlotsFab
+                        turnos={turnos}
+                        onVer={handleVerTurno}
+                        onReservar={handleReservarDirecto}
+                    />
+                )}
         </div>
     )
 }
