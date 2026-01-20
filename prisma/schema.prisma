@@ -20,6 +20,23 @@ model Jugador {
   categoria     Categoria?     @relation(fields: [categoriaId], references: [id])
   
   inscripciones Inscripcion[]
+  pagos         Pago[]
+}
+
+model Pago {
+  id        Int      @id @default(autoincrement())
+  jugadorId Int
+  fecha     DateTime @default(now())
+  monto     Int      @default(0)
+  mes       Int      // 1-12
+  anio      Int      // 2024
+  metodo    String?  // 'EFECTIVO', 'TRANSFERENCIA'
+  nota      String?
+  
+  jugador   Jugador  @relation(fields: [jugadorId], references: [id])
+  
+  @@index([jugadorId])
+  @@index([mes, anio])
 }
 
 // Necesita el reverso en Categoria también (opcional pero Prisma se quejará si no)
@@ -42,6 +59,7 @@ model Turno {
   horaInicio String
   horaFin    String
   activo     Boolean   @default(true)
+  modalidad  String    @default("GRUPAL") // INDIVIDUAL, PAREJA, GRUPAL
 
   categoriaId Int
   categoria   Categoria @relation(fields: [categoriaId], references: [id])
@@ -127,11 +145,17 @@ model Inscripcion {
   cupo    Cupo     @relation(fields: [cupoId], references: [id], onDelete: Cascade)
 }
 
+
 model Admin {
   id       Int    @id @default(autoincrement())
   usuario  String @unique
   password String
   activo   Boolean @default(true)
+}
+
+model Configuracion {
+  key   String @id
+  value String // JSON stringificado para flexibilidad
 }
 
 enum CupoEstado {

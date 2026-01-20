@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X, CheckCircle2, AlertCircle, Calendar, Clock, Lock, ShieldAlert, Info, ChevronRight, User, Mail, Phone } from 'lucide-react'
 
 export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }) {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const [successData, setSuccessData] = useState(null)
+    const [depositAccepted, setDepositAccepted] = useState(false)
 
     const [formData, setFormData] = useState({
         nombre: '',
@@ -12,6 +13,19 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
         telefono: '',
         email: ''
     })
+
+    // Pre-fill from LocalStorage
+    useEffect(() => {
+        if (isOpen) {
+            const savedUser = localStorage.getItem('userData')
+            if (savedUser) {
+                try {
+                    const parsed = JSON.parse(savedUser)
+                    setFormData(prev => ({ ...prev, ...parsed }))
+                } catch (e) { console.error('Error parsing user data', e) }
+            }
+        }
+    }, [isOpen])
 
     if (!isOpen || !cupo) return null
 
@@ -57,6 +71,14 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
             const data = await res.json()
 
             if (res.ok) {
+                // SAVE TO LOCAL STORAGE
+                localStorage.setItem('userData', JSON.stringify({
+                    nombre: formData.nombre,
+                    apellido: formData.apellido,
+                    telefono: formData.telefono,
+                    email: formData.email
+                }))
+
                 onSuccess()
                 setSuccessData(data)
             } else {
@@ -192,6 +214,40 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
                                 </div>
                             </div>
 
+                            {/* 3. INFORMACIÓN DE PAGO (SEÑA) */}
+                            <div className="mb-6 bg-brand-blue/10 border border-brand-blue/30 rounded-xl p-4 relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1 h-full bg-brand-blue"></div>
+                                <h4 className="text-brand-highlight font-heading font-black italic text-lg mb-2">
+                                    ¡IMPORTANTE! SEÑA REQUERIDA
+                                </h4>
+                                <p className="text-sm text-slate-300 mb-3 leading-relaxed">
+                                    Para asegurar tu lugar, aboná la seña de <span className="text-brand-lime font-bold">$5.000</span>.
+                                </p>
+
+                                <div className="bg-black/30 rounded-lg p-3 flex items-center justify-between mb-3 border border-white/5">
+                                    <div className="flex flex-col text-left">
+                                        <span className="text-[10px] text-slate-500 uppercase font-bold">Alias Mercado Pago</span>
+                                        <span className="text-white font-mono font-bold tracking-wide select-all">arma.antes.mp</span>
+                                    </div>
+                                    <button
+                                        onClick={() => navigator.clipboard.writeText('arma.antes.mp')}
+                                        className="text-xs bg-slate-700 hover:bg-brand-blue text-white px-2 py-1 rounded transition-colors"
+                                    >
+                                        Copiar
+                                    </button>
+                                </div>
+
+                                <a
+                                    href={`https://wa.me/5491158376281?text=Hola,%20te%20envio%20el%20comprobante%20de%20la%20seña%20para%20la%20reserva%20de%20${turno?.categoria?.nivel}%20del%20${turno?.dia}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block w-full text-center bg-green-600/20 hover:bg-green-600/40 text-green-400 border border-green-600/30 rounded-lg py-2 text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Phone className="w-3 h-3" />
+                                    Enviar Comprobante (WhatsApp)
+                                </a>
+                            </div>
+
                             <button
                                 onClick={handleClose}
                                 className="w-full bg-brand-lime hover:bg-white hover:scale-[1.02] text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(212,233,24,0.3)] mb-4"
@@ -262,11 +318,37 @@ export default function BookingModal({ isOpen, onClose, turno, cupo, onSuccess }
                                 </div>
                             </div>
 
+                            {/* AVISO IMPORTANTE: SEÑA */}
+                            <div className="bg-brand-blue/10 border border-brand-blue/30 rounded-lg p-3">
+                                <label className="flex items-start gap-3 cursor-pointer group">
+                                    <div className="relative flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            className="peer sr-only"
+                                            checked={depositAccepted}
+                                            onChange={(e) => setDepositAccepted(e.target.checked)}
+                                        />
+                                        <div className="w-5 h-5 border-2 border-slate-500 rounded bg-transparent peer-checked:bg-brand-lime peer-checked:border-brand-lime transition-all"></div>
+                                        <svg className="w-3.5 h-3.5 text-brand-dark absolute left-0.5 top-0.5 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">
+                                            Entiendo que debo abonar una seña
+                                        </span>
+                                        <span className="text-xs text-slate-400 leading-tight mt-0.5">
+                                            Para mantener la reserva es obligatorio pagar <span className="text-brand-lime font-bold">$5.000</span>. Los datos de pago se mostrarán al confirmar.
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
+
                             <div className="pt-2 sticky bottom-0 bg-brand-dark/95 backdrop-blur-md pb-2 -mx-4 px-4 sm:static sm:bg-transparent sm:pb-0 sm:px-0 sm:mx-0">
                                 <button
                                     type="submit"
-                                    disabled={loading}
-                                    className="group w-full bg-brand-lime disabled:opacity-50 disabled:cursor-not-allowed text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(212,233,24,0.25)] hover:shadow-[0_0_30px_rgba(212,233,24,0.5)] hover:bg-white hover:scale-[1.01] flex items-center justify-center gap-2 relative overflow-hidden"
+                                    disabled={loading || !depositAccepted}
+                                    className="group w-full bg-brand-lime disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed text-brand-dark font-heading font-black italic tracking-wider py-4 rounded-xl transition-all shadow-[0_0_20px_rgba(212,233,24,0.25)] hover:shadow-[0_0_30px_rgba(212,233,24,0.5)] hover:bg-white hover:scale-[1.01] flex items-center justify-center gap-2 relative overflow-hidden"
                                 >
                                     <span className="relative z-10">{loading ? 'RESERVANDO...' : 'CONFIRMAR LUGAR'}</span>
                                     {!loading && <ChevronRight className="w-5 h-5 relative z-10 group-hover:translate-x-1 transition-transform" />}

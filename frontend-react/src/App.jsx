@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2, Lock, LogOut, PlusCircle, X, UserMinus, User, FileDown } from 'lucide-react'
+import { Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2, Lock, LogOut, PlusCircle, X, UserMinus, User, FileDown, LayoutGrid, Users, Banknote } from 'lucide-react'
 import CategoryFilter from './components/CategoryFilter'
 import AvailableSlotsFab from './components/AvailableSlotsFab'
 import BookingModal from './components/BookingModal'
@@ -15,6 +15,9 @@ import AdminSlotModal from './components/AdminSlotModal'
 import AdminPlayerModal from './components/AdminPlayerModal'
 import AdminTurnoModal from './components/AdminTurnoModal'
 import AdminWaitlistModal from './components/AdminWaitlistModal'
+import AdminOccupancyMatrix from './components/AdminOccupancyMatrix'
+import AdminPlayersDirectory from './components/AdminPlayersDirectory'
+import AdminDebtors from './components/AdminDebtors'
 import logo from './assets/Logo Academia Bogado verde.png'
 
 export default function App() {
@@ -30,6 +33,9 @@ export default function App() {
     // Modals
     const [bookingModalOpen, setBookingModalOpen] = useState(false)
     const [selectedTurno, setSelectedTurno] = useState(null)
+    const [selectedSlot, setSelectedSlot] = useState(null)
+    const [selectedPlayer, setSelectedPlayer] = useState(null)
+    const [movingPlayer, setMovingPlayer] = useState(null)
     const [waitlistModalOpen, setWaitlistModalOpen] = useState(false)
     const [cancelModalOpen, setCancelModalOpen] = useState(false)
     const [studentModalOpen, setStudentModalOpen] = useState(false)
@@ -130,11 +136,19 @@ export default function App() {
     }
 
     const handleAdminEditPlayer = () => {
+        // Modo edición desde TurnoCard (usando selectedTurno/cupo)
+        setSelectedPlayer(null)
         setAdminSlotModalOpen(false)
         setAdminPlayerModalOpen(true)
     }
 
-    const handleAdminDelete = async (turno) => {
+    const handleEditPlayerDirect = (player) => {
+        // Modo edición desde Directorio
+        setSelectedPlayer(player)
+        setAdminPlayerModalOpen(true)
+    }
+
+    const handleDeleteTurno = async (turno) => {
         if (!confirm('¿Eliminar turno?')) return
         const token = localStorage.getItem('token')
 
@@ -156,6 +170,63 @@ export default function App() {
 
             fetchTurnos()
         } catch (e) { alert(e.message) }
+    }
+
+    const handleStartMove = (turno, cupo) => {
+        const jugador = cupo?.inscripcion?.jugador || cupo?.inscripcion
+        if (!jugador) {
+            alert('No hay jugador para mover')
+            return
+        }
+        setMovingPlayer({ ...jugador, fromCupo: cupo, fromTurno: turno })
+        setAdminSlotModalOpen(false)
+        alert(`Selecciona el DESTINO para mover a ${jugador.nombre}`)
+    }
+
+    const handleCompleteMove = async (destinoTurno, destinoCupo) => {
+        if (!movingPlayer) return
+
+        if (!confirm(`¿Mover a ${movingPlayer.nombre} a ${destinoTurno.dia} ${destinoTurno.horaInicio}?`)) {
+            setMovingPlayer(null)
+            return
+        }
+
+        const token = localStorage.getItem('token')
+        try {
+            // Implementación simplificada: eliminar inscripción origen y crear nueva en destino
+            const inscripcionOrigenId = movingPlayer.fromCupo?.inscripcion?.id
+            if (!inscripcionOrigenId) throw new Error('No se encuentra la inscripción origen')
+
+            // 1. Crear nueva inscripción en destino
+            const resCreate = await fetch('/inscripciones', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    cupoId: destinoCupo.id,
+                    jugadorId: movingPlayer.id,
+                    origen: 'ADMIN_MOVE'
+                })
+            })
+
+            if (!resCreate.ok) throw new Error('Error al crear nueva inscripción')
+
+            // 2. Eliminar inscripción origen
+            await fetch(`/inscripciones/${inscripcionOrigenId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+
+            alert('✅ Jugador movido exitosamente')
+            setMovingPlayer(null)
+            setAdminSlotModalOpen(false)
+            fetchTurnos()
+        } catch (e) {
+            alert('Error al mover: ' + e.message)
+            setMovingPlayer(null)
+        }
     }
 
     const handleExportExcel = async () => {
@@ -218,7 +289,7 @@ export default function App() {
 
             {/* --- HEADER --- */}
             {/* Mostrar Header completo SOLO en modo Explorar, Visitante O ADMIN */}
-            {(activeTab === 'explorar' || !studentCode || isAdmin) && (
+            {(activeTab === 'explorar' || activeTab === 'matrix' || activeTab === 'players' || !studentCode || isAdmin) && (
                 <header className="sticky top-0 z-30 bg-brand-dark/90 backdrop-blur-md border-b border-white/5 shadow-2xl transition-all">
                     <div className="p-4 flex flex-col sm:flex-row justify-between items-center max-w-2xl mx-auto w-full gap-4 sm:gap-0">
                         <div className="flex flex-col select-none cursor-default" onDoubleClick={() => setLoginModalOpen(true)}>
@@ -277,21 +348,58 @@ export default function App() {
 
                             {isAdmin && (
                                 <div className="flex items-center gap-3">
+                                    {/* TOGGLE MATRIX VIEW */}
                                     <button
-                                        onClick={() => setAdminTurnoModalOpen(true)}
-                                        className="bg-brand-highlight hover:bg-blue-400 text-white font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_20px_rgba(59,130,246,0.7)] transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                        onClick={() => setActiveTab(activeTab === 'explorar' ? 'matrix' : 'explorar')}
+                                        className={`font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all flex items-center gap-2
+                                            ${activeTab === 'matrix'
+                                                ? 'bg-brand-lime text-brand-dark shadow-[0_0_15px_rgba(212,233,24,0.3)]'
+                                                : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                                        title={activeTab === 'explorar' ? 'Ver Mapa Ocupación' : 'Ver Turnos Individuales'}
+                                    >
+                                        <LayoutGrid className="w-4 h-4" />
+                                        <span className="hidden sm:inline">{activeTab === 'explorar' ? 'Ver Mapa' : 'Ver Lista'}</span>
+                                    </button>
+
+                                    {/* TOGGLE PLAYERS VIEW */}
+                                    <button
+                                        onClick={() => setActiveTab(activeTab === 'players' ? 'explorar' : 'players')}
+                                        className={`font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all flex items-center gap-2
+                                            ${activeTab === 'players'
+                                                ? 'bg-brand-highlight text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                                                : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                                        title="Directorio de Jugadores"
+                                    >
+                                        <Users className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Jugadores</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => setActiveTab(activeTab === 'pagos' ? 'explorar' : 'pagos')}
+                                        className={`font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all flex items-center gap-2
+                                            ${activeTab === 'pagos'
+                                                ? 'bg-emerald-500 text-brand-dark shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                                                : 'bg-slate-800 text-slate-400 hover:text-white'}`}
+                                        title="Control de Pagos"
+                                    >
+                                        <Banknote className="w-4 h-4" />
+                                        <span className="hidden sm:inline">Pagos</span>
+                                    </button>
+
+                                    <button
+                                        onClick={() => { setSelectedTurno(null); setAdminTurnoModalOpen(true); }}
+                                        className="bg-slate-700 hover:bg-slate-600 text-slate-300 font-heading font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all flex items-center gap-2"
+                                        title="Crear Turno Nuevo"
                                     >
                                         <PlusCircle className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Crear Turno</span>
                                     </button>
 
                                     <button
                                         onClick={handleExportExcel}
-                                        className="bg-brand-lime hover:bg-white text-brand-dark font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded shadow-[0_0_15px_rgba(212,233,24,0.3)] hover:shadow-[0_0_20px_rgba(212,233,24,0.5)] transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                        className="bg-slate-800 hover:bg-slate-700 text-slate-400 font-heading font-black text-[10px] uppercase tracking-wider px-3 py-1.5 rounded transition-all flex items-center gap-2"
                                         title="Descargar Reporte Completo"
                                     >
                                         <FileDown className="w-4 h-4" />
-                                        <span className="hidden sm:inline">Exportar</span>
                                     </button>
 
                                     <button
@@ -306,22 +414,45 @@ export default function App() {
                     </div>
 
                     {/* Filters (Solo en Explorar) */}
-                    <div className="pb-2">
-                        <CategoryFilter
-                            categories={categories}
-                            selected={filterCategory}
-                            onSelect={setFilterCategory}
-                            mode={isAdmin ? "admin" : "user"}
-                        />
-                    </div>
+                    {activeTab === 'explorar' && (
+                        <div className="pb-2">
+                            <CategoryFilter
+                                categories={categories}
+                                selected={filterCategory}
+                                onSelect={setFilterCategory}
+                                mode={isAdmin ? "admin" : "user"}
+                            />
+                        </div>
+                    )}
                 </header>
             )}
 
             {/* --- MAIN CONTENT --- */}
-            <main className="max-w-2xl mx-auto w-full min-h-[80vh]">
+            <main className="max-w-4xl mx-auto w-full min-h-[80vh]">
+
+                {/* VISTA A: MAPA OCUPACIÓN (ADMIN ONLY) */}
+                {isAdmin && activeTab === 'matrix' && (
+                    <div className="p-4">
+                        <AdminOccupancyMatrix />
+                    </div>
+                )}
+
+                {/* VISTA B: DIRECTORIO JUGADORES (ADMIN ONLY) */}
+                {isAdmin && activeTab === 'players' && (
+                    <div className="p-4">
+                        <AdminPlayersDirectory onEdit={handleEditPlayerDirect} />
+                    </div>
+                )}
+
+                {/* VISTA C: CONTROL DE PAGOS (ADMIN ONLY) */}
+                {isAdmin && activeTab === 'pagos' && (
+                    <div className="p-4">
+                        <AdminDebtors />
+                    </div>
+                )}
 
                 {/* VISTA 1: EXPLORAR (GRID) */}
-                {(activeTab === 'explorar' || isAdmin) && (
+                {activeTab === 'explorar' && (
                     <div className="p-4 space-y-4 animate-in fade-in zoom-in-95 duration-500">
                         {loading ? (
                             <div className="text-center py-20">
@@ -337,8 +468,19 @@ export default function App() {
                                         isAdmin={isAdmin}
                                         onReservar={handleReservar}
                                         onVer={handleVerTurno}
-                                        onAdminJugador={handleAdminJugador}
-                                        onDelete={handleAdminDelete}
+                                        onAdminJugador={(t, c) => {
+                                            setSelectedTurno(t)
+                                            // Hack: pass params via state
+                                            setAdminSlotModalOpen(true)
+                                            // This modal logic is a bit tangled, but we need to pass the specific slot
+                                            // Ideally AdminSlotModal should take a prop 'slot'
+                                            // For now, let's rely on setSelectedTurno having the data, but we also need the specific slot
+                                            // Let's attach it to the turno object temporarily or store in separate state
+                                            // BETTER: Create selectedSlot state
+                                            setSelectedSlot(c)
+                                        }}
+                                        onDelete={handleDeleteTurno}
+                                        onEdit={(t) => { setSelectedTurno(t); setAdminTurnoModalOpen(true); }}
                                     />
                                 ))}
 
@@ -397,6 +539,33 @@ export default function App() {
                 onClose={() => setCancelModalOpen(false)}
                 onSuccess={fetchTurnos}
             />
+            {/* Modal Gestión de Cupo (Admin) */}
+            <AdminSlotModal
+                isOpen={adminSlotModalOpen}
+                onClose={() => {
+                    setAdminSlotModalOpen(false)
+                    // No limpiamos selectedTurno/selectedSlot aquí para evitar flashes, se limpian al abrir otro
+                }}
+                turno={selectedTurno}
+                cupo={selectedSlot}
+                onSuccess={fetchTurnos}
+                onEdit={() => {
+                    // Pasar datos al modal de jugador y cambiar
+                    setAdminSlotModalOpen(false)
+                    // Necesitamos el jugador completo con ID para editar
+                    const jugador = selectedSlot?.inscripcion?.jugador || {
+                        ...selectedSlot?.inscripcion,
+                        // Fix temporal si es invitado
+                    }
+                    if (jugador) {
+                        setSelectedPlayer(jugador)
+                        setAdminPlayerModalOpen(true)
+                    }
+                }}
+                movingPlayer={movingPlayer}
+                onStartMove={handleStartMove}
+                onCompleteMove={handleCompleteMove}
+            />
 
             <LoginModal
                 isOpen={loginModalOpen}
@@ -419,27 +588,20 @@ export default function App() {
                 }}
             />
 
-            <AdminSlotModal
-                isOpen={adminSlotModalOpen}
-                onClose={() => setAdminSlotModalOpen(false)}
-                turno={selectedTurno}
-                cupo={selectedTurno?.cupoSeleccionado}
-                onSuccess={fetchTurnos}
-                onEdit={handleAdminEditPlayer}
-            />
-
             <AdminPlayerModal
                 isOpen={adminPlayerModalOpen}
                 onClose={() => setAdminPlayerModalOpen(false)}
                 turno={selectedTurno}
-                cupo={selectedTurno?.cupoSeleccionado}
+                cupo={selectedSlot}
+                player={selectedPlayer}
                 onSuccess={fetchTurnos}
             />
 
             <AdminTurnoModal
                 isOpen={adminTurnoModalOpen}
-                onClose={() => setAdminTurnoModalOpen(false)}
+                onClose={() => { setAdminTurnoModalOpen(false); setSelectedTurno(null); }}
                 onSuccess={fetchTurnos}
+                turnoToEdit={selectedTurno}
             />
 
             <AdminWaitlistModal

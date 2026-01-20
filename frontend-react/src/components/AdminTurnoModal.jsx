@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react'
 import { X, Save, Calendar, Clock, Layers } from 'lucide-react'
 
-export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
+
+export default function AdminTurnoModal({ isOpen, onClose, onSuccess, turnoToEdit = null }) {
     const [formData, setFormData] = useState({
         dia: 'Lunes',
         horaInicio: '18:00',
         horaFin: '19:30',
         categoriaId: '',
         cuposPorCancha: 4,
-        canchasIds: [] // [1, 2]
+        canchasIds: [],
+        modalidad: 'GRUPAL'
     })
+
+    const isEditMode = !!turnoToEdit
 
     const [categorias, setCategorias] = useState([])
     const [canchas, setCanchas] = useState([])
     const [loading, setLoading] = useState(false)
 
-    // Cargar datos referencia
+    // Cargar datos referencia y pre-llenar si es edición
     useEffect(() => {
         if (isOpen) {
             Promise.all([
@@ -24,13 +28,34 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
             ]).then(([cats, cans]) => {
                 setCategorias(cats)
                 setCanchas(cans)
-                // Pre-seleccionar todas las canchas por defecto o ninguna
-                // setFormData(prev => ({ ...prev, canchasIds: cans.map(c => c.id) }))
+
+                if (isEditMode) {
+                    setFormData({
+                        dia: turnoToEdit.dia,
+                        horaInicio: turnoToEdit.horaInicio,
+                        horaFin: turnoToEdit.horaFin,
+                        categoriaId: turnoToEdit.categoriaId,
+                        cuposPorCancha: 0, // No relevante en edit
+                        canchasIds: [], // No editable facilmente
+                        modalidad: turnoToEdit.modalidad || 'GRUPAL'
+                    })
+                } else {
+                    setFormData({
+                        dia: 'Lunes',
+                        horaInicio: '18:00',
+                        horaFin: '19:30',
+                        categoriaId: '',
+                        cuposPorCancha: 4,
+                        canchasIds: [],
+                        modalidad: 'GRUPAL'
+                    })
+                }
             }).catch(err => console.error(err))
         }
-    }, [isOpen])
+    }, [isOpen, isEditMode, turnoToEdit])
 
     const handleCanchaToggle = (id) => {
+        if (isEditMode) return // Desactivado en edición
         setFormData(prev => {
             const ids = prev.canchasIds.includes(id)
                 ? prev.canchasIds.filter(c => c !== id)
@@ -41,15 +66,19 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        if (!formData.categoriaId || formData.canchasIds.length === 0) {
+
+        if (!isEditMode && (!formData.categoriaId || formData.canchasIds.length === 0)) {
             alert('Selecciona una categoría y al menos una cancha')
             return
         }
 
         setLoading(true)
         try {
-            const res = await fetch('/turnos', {
-                method: 'POST',
+            const url = isEditMode ? `/turnos/${turnoToEdit.id}` : '/turnos'
+            const method = isEditMode ? 'PUT' : 'POST'
+
+            const res = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -58,12 +87,12 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
             })
 
             if (res.ok) {
-                alert('✅ Turno creado con éxito')
+                alert(isEditMode ? '✅ Turno actualizado' : '✅ Turno creado con éxito')
                 onSuccess()
                 onClose()
             } else {
                 const err = await res.json()
-                alert('Error: ' + (err.error || 'Falló la creación'))
+                alert('Error: ' + (err.error || 'Falló la operación'))
             }
         } catch (e) {
             alert('Error de conexión')
@@ -82,15 +111,22 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
                 <div className="p-4 bg-slate-800 border-b border-slate-700 flex justify-between items-center shrink-0">
                     <h3 className="text-lg font-bold text-white flex items-center gap-2">
                         <Calendar className="w-5 h-5 text-green-500" />
-                        Nuevo Turno
+                        {isEditMode ? 'Editar Turno' : 'Nuevo Turno'}
                     </h3>
                     <button onClick={onClose}><X className="text-slate-400" /></button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
-                    {/* Día y Hora */}
-                    <div className="grid grid-cols-3 gap-4">
-                        <div>
+
+                    {isEditMode && (
+                        <div className="bg-blue-900/20 border border-blue-500/30 p-3 rounded-lg text-xs text-blue-300">
+                            Estás editando un turno existente. <b>Canchas y Cupos</b> no se pueden modificar aquí para proteger las inscripciones vigentes.
+                        </div>
+                    )}
+
+                    {/* Día, Hora y Modalidad */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
                             <label className="text-xs text-slate-400 font-bold mb-1 block">Día</label>
                             <select className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
                                 value={formData.dia} onChange={e => setFormData({ ...formData, dia: e.target.value })}>
@@ -108,6 +144,15 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
                             <label className="text-xs text-slate-400 font-bold mb-1 block">Fin</label>
                             <input type="time" className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
                                 value={formData.horaFin} onChange={e => setFormData({ ...formData, horaFin: e.target.value })} />
+                        </div>
+                        <div className="col-span-2">
+                            <label className="text-xs text-slate-400 font-bold mb-1 block">Modalidad de Cobro</label>
+                            <select className="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white"
+                                value={formData.modalidad} onChange={e => setFormData({ ...formData, modalidad: e.target.value })}>
+                                <option value="GRUPAL">Grupal (Default)</option>
+                                <option value="INDIVIDUAL">Individual</option>
+                                <option value="PAREJA">Pareja</option>
+                            </select>
                         </div>
                     </div>
 
@@ -144,27 +189,29 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
                     </div>
 
                     {/* Canchas */}
-                    <div>
-                        <label className="text-xs text-slate-400 font-bold mb-1 block flex justify-between">
-                            Canchas Habilitadas
-                            <span className="font-normal opacity-70">Selecciona las que usará el turno</span>
-                        </label>
-                        <div className="flex gap-3">
-                            {canchas.map(c => (
-                                <button
-                                    key={c.id}
-                                    type="button"
-                                    onClick={() => handleCanchaToggle(c.id)}
-                                    className={`w-12 h-12 rounded-lg border flex items-center justify-center font-bold text-lg transition-all ${formData.canchasIds.includes(c.id)
-                                        ? 'bg-green-600 border-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]'
-                                        : 'bg-slate-800 border-slate-700 text-slate-500 hover:bg-slate-700'
-                                        }`}
-                                >
-                                    {c.numero}
-                                </button>
-                            ))}
+                    {!isEditMode && (
+                        <div>
+                            <label className="text-xs text-slate-400 font-bold mb-1 block flex justify-between">
+                                Canchas Habilitadas
+                                <span className="font-normal opacity-70">Selecciona las que usará el turno</span>
+                            </label>
+                            <div className="flex gap-3">
+                                {canchas.map(c => (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        onClick={() => handleCanchaToggle(c.id)}
+                                        className={`w-12 h-12 rounded-lg border flex items-center justify-center font-bold text-lg transition-all ${formData.canchasIds.includes(c.id)
+                                            ? 'bg-green-600 border-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.3)]'
+                                            : 'bg-slate-800 border-slate-700 text-slate-500 hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        {c.numero}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="pt-4 border-t border-slate-800">
                         <button
@@ -173,7 +220,7 @@ export default function AdminTurnoModal({ isOpen, onClose, onSuccess }) {
                             className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl transition-colors flex justify-center items-center gap-2"
                         >
                             <Save className="w-4 h-4" />
-                            {loading ? 'Creando...' : 'Crear Turno'}
+                            {loading ? (isEditMode ? 'Guardando...' : 'Creando...') : (isEditMode ? 'Guardar Cambios' : 'Crear Turno')}
                         </button>
                     </div>
                 </form>

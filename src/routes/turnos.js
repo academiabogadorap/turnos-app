@@ -101,7 +101,8 @@ router.post('/', authMiddleware, async (req, res) => {
             horaFin,
             categoriaId,
             cuposPorCancha,
-            canchasIds // Array de IDs de canchas a usar [1, 3, ...]
+            canchasIds, // Array de IDs de canchas a usar [1, 3, ...]
+            modalidad // 'INDIVIDUAL', 'PAREJA', 'GRUPAL'
         } = req.body
 
         // =========================
@@ -143,7 +144,8 @@ router.post('/', authMiddleware, async (req, res) => {
                     dia,
                     horaInicio,
                     horaFin,
-                    categoriaId: parseInt(categoriaId)
+                    categoriaId: parseInt(categoriaId),
+                    modalidad: modalidad || 'GRUPAL'
                 }
             })
 
@@ -187,6 +189,123 @@ router.post('/', authMiddleware, async (req, res) => {
         return res.status(500).json({
             error: 'Error al crear el turno: ' + error.message
         })
+    }
+})
+
+// ==========================================
+// NUEVAS FUNCIONALIDADES ADMIN (FASE 1)
+// ==========================================
+
+/**
+ * GET /turnos/matrix
+ * Retorna una matriz de ocupación optimizada para el Dashboard Admin.
+ * Estructura: { [Categoria]: { [DiaHora]: { total, ocupados, libres, turnos: [] } } }
+ */
+router.get('/matrix', authMiddleware, async (req, res) => {
+    try {
+        if (req.user.role !== 'ADMIN') {
+            return res.status(403).json({ error: 'Acceso denegado' })
+        }
+
+        const todayStr = new Date().toISOString().split('T')[0]
+
+        // 1. Traer TODOS los turnos activos con sus cupos
+        const turnos = await prisma.turno.findMany({
+            where: { activo: true },
+            include: {
+                categoria: true,
+                cupos: {
+                    include: {
+                        inscripcion: true, // Para saber si base ocupado
+                        clasesSueltas: {   // Para saber excepciones de HOY
+                            where: { fecha: todayStr }
+                        }
+                    }
+                }
+            }
+        })
+
+        // 2. Procesar Matriz en Memoria (Más rápido que SQL complejo)
+        const matrix = {}
+
+        turnos.forEach(t => {
+            const catKey = `${t.categoria.nivel} ${t.categoria.genero} (${t.categoria.tipo})`
+            const timeKey = `${t.dia} ${t.horaInicio}`
+
+            if (!matrix[catKey]) matrix[catKey] = {}
+            if (!matrix[catKey][timeKey]) {
+                matrix[catKey][timeKey] = {
+                    total: 0,
+                    ocupados: 0,
+                    libres: 0,
+                    turnosIds: []
+                }
+            }
+
+            // Calcular cupos del turno
+            let libresTurno = 0
+            t.cupos.forEach(c => {
+                const excepcion = c.clasesSueltas[0] // Puede ser undefined
+
+                let isLibre = false
+                if (excepcion) {
+                    // La excepción manda
+                    if (excepcion.estado === 'LIBRE') isLibre = true
+                } else {
+                    // El estado base manda
+                    if (c.estado === 'LIBRE') isLibre = true
+                }
+
+                if (isLibre) libresTurno++
+            })
+
+            const bucket = matrix[catKey][timeKey]
+            bucket.total += t.cupos.length
+            bucket.ocupados += (t.cupos.length - libresTurno)
+            bucket.libres += libresTurno
+            bucket.turnosIds.push(t.id)
+        })
+
+        res.json(matrix)
+
+    } catch (e) {
+        console.error(e)
+        res.status(500).json({ error: 'Error generando matriz' })
+    }
+})
+
+/**
+ * PUT /turnos/:id
+ * Actualiza los datos básicos de un turno (Día, Hora, Categoría, Modalidad).
+ * NO permite modificar estructura de cupos/canchas para evitar inconsistencias.
+ */
+router.put('/:id', authMiddleware, async (req, res) => {
+    try {
+        const id = parseInt(req.params.id)
+        if (req.user.role !== 'ADMIN') return res.status(403).json({ error: 'Acceso denegado' })
+
+        const { dia, horaInicio, horaFin, categoriaId, modalidad } = req.body
+
+        if (!dia || !horaInicio || !horaFin || !categoriaId) {
+            return res.status(400).json({ error: 'Faltan datos obligatorios' })
+        }
+
+        const turno = await prisma.turno.update({
+            where: { id },
+            data: {
+                dia,
+                horaInicio,
+                horaFin,
+                categoriaId: parseInt(categoriaId),
+                modalidad: modalidad || 'GRUPAL'
+            }
+        })
+
+        res.json(turno)
+
+    } catch (e) {
+        console.error(e)
+        res.status(500).json({ error: 'Error actualizando turno' })
     }
 })
 

@@ -1,6 +1,6 @@
 import { Calendar, Clock, User, CheckCircle2, AlertCircle, ChevronRight, Trash2, Edit2 } from 'lucide-react'
 
-export default function TurnoCard({ turno, onReservar, onVer, isAdmin, onAdminJugador, onDelete }) {
+export default function TurnoCard({ turno, onReservar, onVer, isAdmin, onAdminJugador, onDelete, onEdit }) {
     // Helpers
     const getCategoriaLabel = (cat) => {
         return `${cat.nivel} ${cat.genero} • ${cat.tipo}`
@@ -79,15 +79,24 @@ export default function TurnoCard({ turno, onReservar, onVer, isAdmin, onAdminJu
                             {getCategoriaLabel(turno.categoria)}
                         </span>
 
-                        {/* Botón Borrar Turno (Admin) */}
+                        {/* Botones Admin */}
                         {isAdmin && (
-                            <button
-                                onClick={() => onDelete(turno)}
-                                className="text-slate-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-colors mt-1"
-                                title="Archivar Turno"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex gap-1 mt-1">
+                                <button
+                                    onClick={() => onEdit(turno)}
+                                    className="text-slate-500 hover:text-blue-400 p-1.5 hover:bg-blue-500/10 rounded-lg transition-colors"
+                                    title="Editar Turno"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button
+                                    onClick={() => onDelete(turno)}
+                                    className="text-slate-500 hover:text-red-400 p-1.5 hover:bg-red-500/10 rounded-lg transition-colors"
+                                    title="Archivar Turno"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         )}
                     </div>
                 </div>
