@@ -4,6 +4,7 @@ import CategoryFilter from './components/CategoryFilter'
 import AvailableSlotsFab from './components/AvailableSlotsFab'
 import BookingModal from './components/BookingModal'
 import WaitlistModal from './components/WaitlistModal'
+import WelcomeModal from './components/WelcomeModal'
 import TurnoCard from './components/TurnoCard'
 import StudentFreeSlotModal from './components/StudentFreeSlotModal'
 import CancelBookingModal from './components/CancelBookingModal'
@@ -44,6 +45,7 @@ export default function App() {
     const [adminPlayerModalOpen, setAdminPlayerModalOpen] = useState(false)
     const [adminTurnoModalOpen, setAdminTurnoModalOpen] = useState(false)
     const [adminWaitlistModalOpen, setAdminWaitlistModalOpen] = useState(false)
+    const [welcomeModalOpen, setWelcomeModalOpen] = useState(false)
 
     // Initial Load & Auth Check
     useEffect(() => {
@@ -60,7 +62,18 @@ export default function App() {
             setIsAdmin(true)
             setActiveTab('players')
         }
+
+        // Welcome Modal Logic
+        const hasShownWelcome = localStorage.getItem('academia_welcome_shown')
+        if (!hasShownWelcome) {
+            setTimeout(() => setWelcomeModalOpen(true), 1200)
+        }
     }, [])
+
+    const handleCloseWelcome = () => {
+        setWelcomeModalOpen(false)
+        localStorage.setItem('academia_welcome_shown', 'true')
+    }
 
     const handleLogout = () => {
         localStorage.removeItem('studentCode')
@@ -629,6 +642,11 @@ export default function App() {
                         onReservar={handleReservarDirecto}
                     />
                 )}
+
+            <WelcomeModal
+                isOpen={welcomeModalOpen}
+                onClose={handleCloseWelcome}
+            />
         </div>
     )
 }
