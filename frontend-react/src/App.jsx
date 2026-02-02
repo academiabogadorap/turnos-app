@@ -58,7 +58,7 @@ export default function App() {
         const role = localStorage.getItem('role')
         if (token && role === 'ADMIN') {
             setIsAdmin(true)
-            setActiveTab('explorar')
+            setActiveTab('players')
         }
     }, [])
 
@@ -71,10 +71,17 @@ export default function App() {
     const fetchTurnos = async () => {
         try {
             const res = await fetch('/turnos')
+            if (!res.ok) throw new Error('Servidor error')
             const data = await res.json()
-            setTurnos(data)
+            if (Array.isArray(data)) {
+                setTurnos(data)
+            } else {
+                console.error('Data is not an array:', data)
+                setTurnos([])
+            }
         } catch (error) {
             console.error('Error fetching turnos:', error)
+            setTurnos([])
         } finally {
             setLoading(false)
         }
@@ -127,7 +134,7 @@ export default function App() {
     const handleAdminLogin = (status) => {
         setIsAdmin(status)
         setLoginModalOpen(false)
-        if (status) setActiveTab('explorar')
+        if (status) setActiveTab('players')
     }
 
     const handleAdminJugador = (turno, cupo) => {
@@ -274,15 +281,17 @@ export default function App() {
     }
 
     // Filtrado
+    const turnosArray = Array.isArray(turnos) ? turnos : []
+
     const filteredTurnos = filterCategory === 'TODAS'
-        ? turnos
-        : turnos.filter(t =>
+        ? turnosArray
+        : turnosArray.filter(t =>
             t.categoria.nivel === filterCategory || t.categoria.genero === filterCategory
             || (t.categoria.nivel + ' ' + t.categoria.genero).includes(filterCategory)
         )
 
     // Helper para extraer categorias unicos
-    const categories = ['TODAS', ...new Set(turnos.map(t => t.categoria.nivel))]
+    const categories = ['TODAS', ...new Set(turnosArray.map(t => t.categoria.nivel))]
 
     return (
         <div className={`min-h-screen bg-brand-dark text-slate-200 font-sans selection:bg-brand-lime selection:text-brand-dark pb-20`}>

@@ -15,6 +15,13 @@ export default function AdminPlayersDirectory({ onEdit }) {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
 
+            if (res.status === 401 || res.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.reload(); // Recargar para limpiar estados globales
+                return;
+            }
+
             if (!res.ok) throw new Error('Error al cargar jugadores')
 
             const data = await res.json()
